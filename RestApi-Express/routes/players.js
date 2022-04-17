@@ -3,7 +3,6 @@ const router = express.Router();
 const fs = require("fs/promises");
 const shortid = require("shortid");
 const path = require("path");
-const { writeFile } = require("fs");
 
 // varaible
 const dbPath = path.join(__dirname + "/../data/data.json");
@@ -99,7 +98,7 @@ router.put("/:playerId", async (req, res) => {
       };
       players.push(player);
     } else {
-      // update player
+      // update player  //reference issue otherwise
 
       player.name = req.body.name;
       player.country = req.body.country;
