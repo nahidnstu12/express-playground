@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use("/players", playersRouter);
-app.use("/api/v1/raffle/", raffleDrawRouter);
+app.use("/api/v1/tickets/", raffleDrawRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
