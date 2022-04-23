@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 /* GET users listing. */
-router.get("/", async (req, res) => {
+router.get("/health", async (req, res) => {
   try {
     res.status(200).send("<h1>Hello Nahid</h1>");
   } catch (err) {
