@@ -47,3 +47,13 @@ exports.login = async (req, res) => {
     res.send(`<h1>${err._message}</h1>`);
   }
 };
+
+exports.fetchUser = async (req, res) => {
+  try {
+    const users = await User.find().populate("todos");
+    res.status(200).json(users);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("<h1>Server Error</h1>");
+  }
+};

@@ -1,10 +1,20 @@
 const Todo = require("../schemas/todoSchema");
+const User = require("../schemas/UserSchema");
 
 exports.createTodo = async (req, res) => {
   try {
-    const newTodo = new Todo(req.body);
+    // const newTodo = new Todo({ ...req.body, user: req.userId });
+     const newTodo = new Todo({
+       ...req.body,
+       user: req.userId,
+     });
     const result = await newTodo.save();
-    // console.log(result)
+    await User.updateOne({_id: req.userId},{
+        $push:{
+           todos: result._id
+        }
+    })
+    // console.log({newTodo,  id: req.userId});
     res.status(201).json({ message: "Insert Successfully", result });
   } catch (err) {
     console.log(err);
@@ -24,7 +34,9 @@ exports.createBulkTodo = async (req, res) => {
 
 exports.findAll = async (req, res) => {
   try {
-    const data = await Todo.find({ status: "active" }).select({
+    const data = await Todo.find({ status: "active" })
+    .populate("user","fullname username -_id")
+    .select({
       _id: 0,
       __v: 0,
     });

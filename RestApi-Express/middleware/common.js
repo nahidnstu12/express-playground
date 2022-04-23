@@ -7,8 +7,9 @@ exports.checkLogin = async (req, res, next) => {
       authorization.split(" ")[1],
       process.env.JWT_SECRET
     );
-    const { username, userId } = decoded;
-    req.userId = userId
+    const { username, _id } = decoded;
+    console.log("tt ",decoded)
+    req.userId = _id
     req.username = username
     next()
   } catch (err) {
