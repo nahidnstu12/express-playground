@@ -1,14 +1,34 @@
 var express = require("express");
+const {
+  getAllTickets,
+  sellSingleTicket,
+  getTicketById,
+  updateTicketById,
+  deleteTicketById,
+  getTicketsByUsername,
+  updateTicketByUsername,
+  deleteTicketByUsername,
+  sellBulkTicket,
+  raffleDraw,
+} = require("../controller/raffleController");
 var router = express.Router();
 
+//
+router.route("/").get(getAllTickets).post(sellSingleTicket);
+// by id
+router
+  .route("/t/:id")
+  .get(getTicketById)
+  .put(updateTicketById)
+  .delete(deleteTicketById);
+// by username
+router
+  .route("/u/:username")
+  .get(getTicketsByUsername)
+  .put(updateTicketByUsername)
+  .delete(deleteTicketByUsername);
 
-router.get("/", async (req, res) => {
-  try {
-    res.status(200).send("<h1>Hello Nahid</h1>");
-  } catch (err) {
-    console.log(err);
-    res.status(err.status).send(`<h1>${err.message}</h1>`);
-  }
-});
+router.get("/draw", raffleDraw);
+router.post("/bulk", sellBulkTicket);
 
 module.exports = router;

@@ -1,9 +1,12 @@
+const { readFile, writeFile } = require("../lib/utils");
 const Ticket = require("./Ticket");
 
-const tickets = new Symbol("tickets");
+const tickets = Symbol("tickets");
 class TicketCollection {
   constructor() {
-    this[tickets] = [];
+    (async function () {
+      this[tickets] = await readFile();
+    }.call(this));
   }
   /**
    * create a single ticket
@@ -14,6 +17,7 @@ class TicketCollection {
   create(username, price) {
     const ticket = new Ticket(username, price);
     this[tickets].push(ticket);
+    writeFile(this[tickets]);
     return ticket;
   }
   /**
@@ -28,6 +32,7 @@ class TicketCollection {
     for (let i = 0; i < quantity; i++) {
       res.push(this.create(username, price));
     }
+    writeFile(this[tickets]);
     return res;
   }
   /**
@@ -43,13 +48,11 @@ class TicketCollection {
    * @returns {Ticket}
    */
   findById(ticketId) {
-    this[tickets].find(
+    return this[tickets].find(
       /**
        * @param {Ticket} ticket
        */
-      (ticket) => {
-        ticket.id === ticketId;
-      }
+      (ticket) => ticket.id === ticketId
     );
   }
   /**
@@ -70,9 +73,11 @@ class TicketCollection {
    */
   updateById(ticketId, ticketBody) {
     const ticket = this.findById(ticketId);
-    ticket.username = ticketBody.username ?? ticket.username;
-    ticket.price = ticketBody.price ?? ticket.price;
-
+    if (ticket) {
+      ticket.username = ticketBody.username ?? ticket.username;
+      ticket.price = ticketBody.price ?? ticket.price;
+    }
+    writeFile(this[tickets]);
     return ticket;
   }
   /**
@@ -82,10 +87,15 @@ class TicketCollection {
    */
   updatedBulk(username, ticketBody) {
     const userTickets = this.findByUsername(username);
-    const updatedTickets = userTickets.map((ticket) =>
-      this.updateById(ticket.id, ticketBody)
-    );
-    return updatedTickets;
+    if (userTickets) {
+      const updatedTickets = userTickets.map((ticket) =>
+        this.updateById(ticket.id, ticketBody)
+      );
+       writeFile(this[tickets]);
+      return updatedTickets;
+    } else {
+      return false;
+    }
   }
   /**
    * delete single ticket by id
@@ -98,33 +108,38 @@ class TicketCollection {
       return false;
     } else {
       this[tickets].splice(index, 1);
+      writeFile(this[tickets]);
       return true;
     }
   }
   /**
-   *
+   * Delete Bulk
    * @param {string} username
+   * @returns {boolean[]}
    */
   deleteBulk(username) {
     const userTickets = this.findByUsername(username);
-    return userTickets.map((ticket) => this.deleteById(ticket.id));
+    const tickets = userTickets.map((ticket) => this.deleteById(ticket.id));
+    writeFile(this[tickets]);
+    return tickets;
   }
   /**
    * find winner
    * @param {number} winnerCount
+   * @returns {array}
    */
   draw(winnerCount) {
-    const winnerIndexs = new Array(winnerCount);
+    let winnerIndexs = new Array(winnerCount);
 
-    const winnerIndex = 0
-    while(winnerCount > winnerIndex){
-        let ticketIndex = Math.floor(Math.random() * this[tickets].length)
-        if(!winnerIndexs.includes(ticketIndex)){
-            winnerIndexs[winnerIndex++ ] = ticketIndex
-            continue
-        }
+    let winnerIndex = 0;
+    while (winnerCount > winnerIndex) {
+      let ticketIndex = Math.floor(Math.random() * this[tickets].length);
+      if (!winnerIndexs.includes(ticketIndex)) {
+        winnerIndexs[winnerIndex++] = ticketIndex;
+        continue;
+      }
     }
-    return winnerIndexs.map(index => this[tickets][index])
+    return winnerIndexs.map((index) => this[tickets][index]);
   }
 }
 
