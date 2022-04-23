@@ -140,3 +140,34 @@ exports.randomTwoTodo = async (req, res) => {
     res.status(err.status).send(`<h1>${err.message}</h1>`);
   }
 }
+
+exports.getActiveTodo = async (req, res) => {
+  const todo = new Todo();
+  const data = await todo.findActive();
+  res.status(200).json({
+    data,
+  });
+};
+
+exports.getActiveTodoCB = (req, res) => {
+  const todo = new Todo();
+  todo.findActiveCallback((err, data) => {
+    res.status(200).json({
+      data,
+    });
+  });
+};
+
+exports.getByTitle = async (req, res) => {
+  const data = await Todo.findByJS();
+  res.status(200).json({
+    data,
+  });
+};
+
+exports.getByLanguage = async (req, res) => {
+  const data = await Todo.find().byLanguage("react");
+  res.status(200).json({
+    data,
+  });
+};

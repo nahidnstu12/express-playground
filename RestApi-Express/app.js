@@ -12,6 +12,7 @@ var todoRouter = require("./routes/todo");
 const mongoose = require("mongoose");
 
 var app = express();
+require("dotenv").config();
 
 // database connection
 mongoose
@@ -34,7 +35,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
+app.use("/api/v1/users/", usersRouter);
 app.use("/players", playersRouter);
 app.use("/api/v1/tickets/", raffleDrawRouter);
 app.use("/api/v1/todos/", todoRouter);

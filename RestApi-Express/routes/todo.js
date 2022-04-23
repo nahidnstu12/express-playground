@@ -1,7 +1,5 @@
 const express = require("express");
-const { default: mongoose } = require("mongoose");
 const router = express.Router();
-const shortid = require("shortid");
 const {
   createTodo,
   createBulkTodo,
@@ -11,7 +9,12 @@ const {
   updateTodoByPut,
   deleteTodo,
   randomTwoTodo,
+  getActiveTodo,
+  getActiveTodoCB,
+  getByLanguage,
+  getByTitle,
 } = require("../controller/todoController");
+const { checkLogin } = require("../middleware/common");
 
 
 // const todo = new Todo()
@@ -26,7 +29,7 @@ router.get("/health", async (req, res) => {
 });
 
 // create a todo
-router.post("/", createTodo);
+router.post("/", checkLogin, createTodo);
 
 // create multiple todo
 router.post("/bulk", createBulkTodo);
@@ -47,4 +50,20 @@ router.delete("/:id", deleteTodo);
 
 // random 3 todo
 router.get("/play/random", randomTwoTodo);
+
+
+// instance
+// GET ACTIVE TODOS
+router.get("/active", getActiveTodo);
+
+// GET ACTIVE TODOS with callback
+router.get("/active-callback", getActiveTodoCB);
+
+// GET ACTIVE TODOS
+router.get("/js", getByTitle);
+
+// GET TODOS BY LANGUAGE
+router.get("/language", getByLanguage);
+
+
 module.exports = router;

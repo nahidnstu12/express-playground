@@ -1,4 +1,5 @@
 var express = require('express');
+const { signup, login } = require('../controller/userController');
 var router = express.Router();
 
 /* GET users listing. */
@@ -10,5 +11,8 @@ router.get("/health", async (req, res) => {
     res.status(err.status).send(`<h1>${err.message}</h1>`);
   }
 });
+
+router.post("/signup", signup)
+router.post("/login", login)
 
 module.exports = router;
