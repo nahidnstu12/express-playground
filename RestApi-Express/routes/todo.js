@@ -14,7 +14,7 @@ const {
   getByLanguage,
   getByTitle,
 } = require("../controller/todoController");
-const { checkLogin } = require("../middleware/common");
+const { checkLogin, checkAuthorize } = require("../middleware/common");
 const Todo = require("../schemas/todoSchema");
 
 // const todo = new Todo()
@@ -29,13 +29,13 @@ router.get("/health", async (req, res) => {
 });
 
 // create a todo
-router.post("/", checkLogin, createTodo);
+router.post("/", checkLogin, checkAuthorize(["admin"]), createTodo);
 
 // create multiple todo
-router.post("/bulk",checkLogin, createBulkTodo);
+router.post("/bulk", checkLogin, createBulkTodo);
 
 // get all todos
-router.get("/", checkLogin, findAll);
+router.get("/", checkLogin, checkAuthorize(["admin", "client"]), findAll);
 // get single todos
 router.get("/:id", findSingleTodo);
 
@@ -50,7 +50,7 @@ router.delete("/:id", deleteTodo);
 
 router.delete("/d/delete-all", async (req, res) => {
   await Todo.deleteMany({});
-  res.status(200).json("all deleted")
+  res.status(200).json("all deleted");
 });
 // random 3 todo
 router.get("/play/random", randomTwoTodo);
