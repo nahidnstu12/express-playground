@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const Joi = require("joi");
 const { body, validationResult } = require("express-validator");
 const books = [
   { name: "JS Program", author: "HM Nayem" },
@@ -91,9 +92,9 @@ const pplhandler = (req, res) => {
   console.log(req.body);
   res.status(200).json({ msg: "All Set", result: req.body });
 };
-
+// express validator
 router.post("/ppl", validateMiddleware, validateHandler, pplhandler);
-/* GET home page. */
+
 router.get("/", function (req, res) {
   const bookName = req.query.name;
   if (!bookName) {
@@ -123,5 +124,67 @@ router.post("/", function (req, res) {
   //   console.log(bookLists)
   return res.status(200).json(books);
 });
+
+/**
+ * Joi Validator
+ */
+
+// create joi schema
+const strongPasswordRegex =
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+const stringPassswordError = new Error(
+  "Password must be strong. At least one upper case alphabet. At least one lower case alphabet. At least one digit. At least one special character. Minimum eight in length"
+);
+const schema = Joi.object({
+  name: Joi.string().trim().min(5).max(30).required().messages({
+    "string.base": "Required field should be string",
+    "string.min": "required more than 3 chars",
+    "string.max": "required less than 30 chars",
+  }),
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net", "org"] } })
+    .normalize()
+    .custom((v) => {
+      if (v === "nahid@mail.com") {
+        throw new Error("Email Alreay in Used");
+      }
+      return v;
+    })
+    .required()
+    .messages({
+      "any.custom": "Email already in used",
+    }),
+  username: Joi.string().trim().alphanum().min(3).max(30).required(),
+  password: Joi.string()
+    .max(30)
+    .pattern(strongPasswordRegex)
+    .required()
+    .messages({ "string.pattern.base": stringPassswordError }),
+  confirmPass: Joi.string()
+    .required()
+    .valid(Joi.ref("password"))
+    .messages({ "any.only": "Password won't match" }),
+  address: Joi.array().items(
+    Joi.object({ city: Joi.string(), post: Joi.number() })
+  ),
+  skills: Joi.string().custom((v) => v.split(",").map((item) => item.trim())),
+});
+// controller
+const handler = (req, res) => {
+  const result = schema.validate(req.body, { abortEarly: false });
+  if (result.error) {
+    const errors = result.error.details.reduce((acc,curr)=> {
+      acc[curr.path[0]] = curr.message
+      return acc
+    },{})
+    console.log(result.error.details);
+    res.status(400).json(errors);
+  }
+
+  console.log(result.value);
+  res.status(201).json(result.value);
+};
+// route
+router.post("/joi-validator", handler);
 
 module.exports = router;
