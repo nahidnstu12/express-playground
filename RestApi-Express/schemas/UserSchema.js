@@ -14,6 +14,11 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    role:{
+      type: String,
+      enum:["admin", "client"],
+      default: "client"
+    },
     todos: [
       {
         type: mongoose.Types.ObjectId,

@@ -6,10 +6,10 @@ exports.createTodo = async (req, res) => {
     // const newTodo = new Todo({ ...req.body, user: req.userId });
      const newTodo = new Todo({
        ...req.body,
-       user: req.userId,
+       user: req.user._id,
      });
     const result = await newTodo.save();
-    await User.updateOne({_id: req.userId},{
+    await User.updateOne({_id: req.user._id},{
         $push:{
            todos: result._id
         }

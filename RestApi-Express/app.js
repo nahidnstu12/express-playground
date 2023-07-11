@@ -9,6 +9,7 @@ var usersRouter = require("./routes/users");
 var playersRouter = require("./routes/players");
 var raffleDrawRouter = require("./routes/raffleDraw");
 var todoRouter = require("./routes/todo");
+var bookRouter = require("./routes/booksRouter");
 const mongoose = require("mongoose");
 
 var app = express();
@@ -39,6 +40,7 @@ app.use("/api/v1/users/", usersRouter);
 app.use("/players", playersRouter);
 app.use("/api/v1/tickets/", raffleDrawRouter);
 app.use("/api/v1/todos/", todoRouter);
+app.use("/books/", bookRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
