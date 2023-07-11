@@ -53,7 +53,7 @@ app.use(function (err, req, res, next) {
 // console.log(process.env.MONGO_CONNECTION_STRING);
 
 //create server
-app.listen(process.env.PORT || 3100, () => {
+app.listen(process.env.PORT || 6050, () => {
   console.log(`Example app listening on port ${process.env.PORT}`);
 });
 
