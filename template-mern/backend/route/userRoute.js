@@ -1,23 +1,24 @@
-const {
+import express from "express";
+import {
   getUser,
   addUser,
   removeUser,
   getSingleUser,
   updateUser,
-} = require("../controller/userController");
-const {
+} from "../controller/userController.js";
+import {
   checkLogin,
   checkAuthorizeRoles,
   checkSelfAuthorize,
-} = require("../middleware/verifyToken");
-const {
+} from "../middleware/verifyToken.js";
+import {
   addUserValidators,
   addUserValidationHandler,
   updateUserValidators,
   updateUserValidationHandler,
-} = require("../validation/UserValidation");
+} from "../validation/UserValidation.js";
 
-const router = require("express").Router();
+const router = express.Router();
 
 router.get("/health", async (req, res) => {
   try {
@@ -53,4 +54,4 @@ router.put(
   updateUser
 );
 router.delete("/:id", checkLogin, checkAuthorizeRoles(["admin"]), removeUser);
-module.exports = router;
+export default router;

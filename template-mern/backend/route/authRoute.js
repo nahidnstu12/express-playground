@@ -1,11 +1,16 @@
-const router = require("express").Router();
-
-const { register, login } = require("../controller/authController");
-const {
+import express from "express";
+import { register, login } from "../controller/authController.js";
+import {
   doLoginValidators,
   doLoginValidationHandler,
-} = require("../validation/loginValidation");
-const { addUserValidators, addUserValidationHandler } = require("../validation/UserValidation");
+} from "../validation/loginValidation.js";
+import {
+  addUserValidators,
+  addUserValidationHandler,
+} from "../validation/UserValidation.js";
+
+const router = express.Router();
+
 
 //REGISTER
 router.post("/register",addUserValidators,addUserValidationHandler, register);
@@ -15,4 +20,4 @@ router.post("/login", doLoginValidators, doLoginValidationHandler, login);
 
 //LOGOUT
 
-module.exports = router;
+export default router;

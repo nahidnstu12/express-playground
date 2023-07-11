@@ -1,37 +1,45 @@
-const express = require("express");
-const mongoose = require("mongoose");
-require("dotenv").config();
-const cookieParser = require("cookie-parser");
-const logger = require("morgan");
-const path = require("path");
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import logger from "morgan";
+import path from "path";
 
 // internal imports
-const userRoute = require("./route/userRoute");
-const authRoute = require("./route/authRoute");
+import userRoute from "./route/userRoute.js";
+import authRoute from "./route/authRoute.js";
+
+dotenv.config();
+
 
 // app scafolding
 const app = express();
 
 // database connection
-mongoose
-  .connect(process.env.MONGO_CONNECTION_STRING, {
+try {
+  await mongoose.connect(process.env.MONGO_CONNECTION_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connection Successful!"))
-  .catch((err) => console.log(err));
+  }, ()=> {
+    console.log("Connection Successful!");
+  });
+
+} catch (err) {
+  console.log(err);
+}
 
 // global middleware
-app.use(require("cors")());
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(import.meta.url, "public")));
 app.use(logger("dev"));
 
 // routeHandler
 app.use("/api/users", userRoute);
-app.use("/api/", authRoute);
+app.use("/api/auth", authRoute);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -57,4 +65,5 @@ app.listen(process.env.PORT || 6050, () => {
   console.log(`Example app listening on port ${process.env.PORT}`);
 });
 
-module.exports = app;
+// module.exports = app;
+export default app;

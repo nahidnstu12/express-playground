@@ -1,7 +1,8 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/userSchemas");
+import jwt from "jsonwebtoken";
+import User from "../models/userSchemas.js";
 
-exports.checkLogin = async (req, res, next) => {
+
+export const checkLogin = async (req, res, next) => {
   console.log("ckLoging");
   try {
     const { authorization } = req.headers;
@@ -32,7 +33,7 @@ exports.checkLogin = async (req, res, next) => {
     res.status(401).send(`<h1>Authorization Failed</h1>`);
   }
 };
-exports.checkSelfAuthorize = async (req, res, next) => {
+export const checkSelfAuthorize = async (req, res, next) => {
   console.log("checkSelfAuthorize");
   console.log({ id: req.user.id, _id: req.params.id, role: req.user.role });
   try {
@@ -45,7 +46,7 @@ exports.checkSelfAuthorize = async (req, res, next) => {
     console.log(err);
   }
 };
-exports.checkAuthorizeRoles = (roles) => async (req, res, next) => {
+export const checkAuthorizeRoles = (roles) => async (req, res, next) => {
   console.log("checkAuthorizeRoles");
   // console.log("roles=>", roles, req.user.role);
   if (roles.includes(req.user.role)) {
@@ -58,7 +59,7 @@ exports.checkAuthorizeRoles = (roles) => async (req, res, next) => {
 };
 
 // another way {isAdmin: false}
-exports.verifyToken = (req, res, next) => {
+export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.token;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
@@ -72,7 +73,7 @@ exports.verifyToken = (req, res, next) => {
   }
 };
 
-exports.verifyTokenAndAuthorization = (req, res, next) => {
+export const verifyTokenAndAuthorization = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user.id === req.params.id || req.user.isAdmin) {
       next();
@@ -82,7 +83,7 @@ exports.verifyTokenAndAuthorization = (req, res, next) => {
   });
 };
 
-exports.verifyTokenAndAdmin = (req, res, next) => {
+export const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user.isAdmin) {
       next();

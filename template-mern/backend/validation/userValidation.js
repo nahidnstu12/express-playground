@@ -1,14 +1,14 @@
-// external imports
-const { check, validationResult } = require("express-validator");
-const createError = require("http-errors");
-const path = require("path");
-const { unlink } = require("fs");
+import { check, validationResult } from "express-validator";
+import createError from "http-errors";
+import path from "path";
+import { unlink } from "fs";
 
 // internal imports
-const User = require("../models/userSchemas");
+import User from "../models/userSchemas.js";
+
 
 // add user
-exports.addUserValidators = [
+export const addUserValidators = [
   check("username")
     .isLength({ min: 3 })
     .withMessage("Name is required")
@@ -61,7 +61,7 @@ exports.addUserValidators = [
     ),
 ];
 
-exports.addUserValidationHandler = function (req, res, next) {
+export const addUserValidationHandler = function (req, res, next) {
   const errors = validationResult(req);
   const mappedErrors = errors.mapped();
   //   console.log(Object.keys(mappedErrors).length);
@@ -87,7 +87,7 @@ exports.addUserValidationHandler = function (req, res, next) {
 };
 
 // update
-exports.updateUserValidators = [
+export const updateUserValidators = [
   check("email")
     .isEmail()
     .withMessage("Invalid email address")
@@ -105,7 +105,7 @@ exports.updateUserValidators = [
     .withMessage("Specify role properly"),
 ];
 
-exports.updateUserValidationHandler = function (req, res, next) {
+export const updateUserValidationHandler = function (req, res, next) {
   const errors = validationResult(req);
   const mappedErrors = errors.mapped();
   //   console.log(Object.keys(mappedErrors).length);

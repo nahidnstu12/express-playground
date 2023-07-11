@@ -1,13 +1,13 @@
 // external imports
-const bcrypt = require("bcryptjs");
-const { unlink } = require("fs");
-const path = require("path");
+import bcrypt from "bcryptjs";
+import { unlink } from "fs";
+import path from "path";
 
 // internal imports
-const User = require("../models/userSchemas");
+import User from "../models/userSchemas.js";
 
 // get all users
-exports.getUser = async (req, res, next) => {
+export const getUser = async (req, res, next) => {
   try {
     const users = await User.find();
     res.status(200).json({ data: users, total: users.length });
@@ -16,7 +16,7 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-exports.getSingleUser = async (req, res, next) => {
+export const getSingleUser = async (req, res, next) => {
   try {
     const id = req.params.id;
 
@@ -31,7 +31,7 @@ exports.getSingleUser = async (req, res, next) => {
 };
 
 // add user
-exports.addUser = async (req, res) => {
+export const addUser = async (req, res) => {
   let newUser;
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -66,7 +66,7 @@ exports.addUser = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res, next) => {
+export const updateUser = async (req, res, next) => {
   const id = req.params.id;
 
   try {
@@ -106,7 +106,7 @@ exports.updateUser = async (req, res, next) => {
 };
 
 // remove user
-exports.removeUser = async (req, res, next) => {
+export const removeUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete({
       _id: req.params.id,

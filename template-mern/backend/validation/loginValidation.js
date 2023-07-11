@@ -1,6 +1,6 @@
-const { check, validationResult } = require("express-validator");
+import { check, validationResult } from "express-validator";
 
-exports.doLoginValidators = [
+export const doLoginValidators = [
   check("username")
     .isLength({
       min: 3,
@@ -10,7 +10,7 @@ exports.doLoginValidators = [
 ];
 
 // object format
-exports.doLoginValidationHandler = (req, res, next) => {
+export const doLoginValidationHandler = (req, res, next) => {
   const errors = validationResult(req);
   const mappedErrors = errors.mapped();
 //   const errors = validationResult(req).formatWith(errorFormatter);
@@ -25,7 +25,7 @@ exports.doLoginValidationHandler = (req, res, next) => {
 };
 
 // array format
-exports.doLoginValidationHandler2 = (req, res, next) => {
+export const doLoginValidationHandler2 = (req, res, next) => {
   const errorFormatter = ({ msg, param }) => `${param} : ${msg}`;
   const errors = validationResult(req).formatWith(errorFormatter);
   if (!errors.isEmpty()) {
