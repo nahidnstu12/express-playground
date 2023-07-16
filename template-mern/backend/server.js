@@ -9,22 +9,25 @@ import path from "path";
 // internal imports
 import userRoute from "./route/userRoute.js";
 import authRoute from "./route/authRoute.js";
+import authRouteMDB from "./simple-auth-jwt/router";
 
 dotenv.config();
-
 
 // app scafolding
 const app = express();
 
 // database connection
 try {
-  await mongoose.connect(process.env.MONGO_CONNECTION_STRING, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }, ()=> {
-    console.log("Connection Successful!");
-  });
-
+  await mongoose.connect(
+    process.env.MONGO_CONNECTION_STRING,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    },
+    () => {
+      console.log("Connection Successful!");
+    },
+  );
 } catch (err) {
   console.log(err);
 }
@@ -39,7 +42,8 @@ app.use(logger("dev"));
 
 // routeHandler
 app.use("/api/users", userRoute);
-app.use("/api/auth", authRoute);
+app.use("/api/v1/auth", authRoute);
+app.use("/api/v2/auth", authRouteMDB);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
