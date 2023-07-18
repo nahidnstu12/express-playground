@@ -9,7 +9,7 @@ import path from "path";
 // internal imports
 import userRoute from "./route/userRoute.js";
 import authRoute from "./route/authRoute.js";
-import authRouteMDB from "./simple-auth-jwt/router";
+import authRouteMDB from "./simple-auth-jwt/router.js";
 
 dotenv.config();
 
