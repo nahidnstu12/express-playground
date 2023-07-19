@@ -19,19 +19,18 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: true,
-    min: 4,
-    max: 8,
+    // minlength: 4,
+    // maxlength: 200
   },
   phone: {
     type: String,
-    required: false,
   },
   role: {
     type: [String],
     default: "customer",
     enum: ["admin", "customer", "delivery"],
   },
-});
+}, { timestamps: true });
 
 const User = new mongoose.model("User", userSchema);
 export default User;
