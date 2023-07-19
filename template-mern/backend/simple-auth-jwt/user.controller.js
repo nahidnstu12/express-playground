@@ -36,7 +36,7 @@ export const registerUser = async (req, res, next) => {
     // token generation
     try {
       const tokenGenerate = jwt.sign(
-        { email, role: req?.body?.role },
+        { email, role: req?.body?.role, username: req?.body?.username },
         "section-token-generate",
         {
           expiresIn: "1h",
@@ -77,7 +77,11 @@ export const loginUser = async (req, res, next) => {
       res.status(400).send({ msg: "credentials do not match" });
     }
     const tokenGen = await jwt.sign(
-      { email: userFound[0].email, role: userFound[0].role },
+      {
+        email: userFound[0].email,
+        role: userFound[0].role,
+        username: userFound[0].username,
+      },
       "section-token-generate",
       { expiresIn: "1h" },
     );
@@ -99,8 +103,30 @@ export const logoutUser = async (req, res, next) => {
 
 export const profile = async (req, res, next) => {
   try {
-    const users = await User.find();
-    res.status(200).send({ data: users, total: users?.length });
+    const requestToken = req?.headers?.authorization || "";
+    if (!requestToken) {
+      res.status(401).send({ msg: "You have not permission." });
+    }
+
+    const decodedUser = await jwt.verify(
+      requestToken,
+      "section-token-generate",
+    );
+
+    const userFind = await User.find({
+      email: decodedUser?.email,
+      username: decodedUser?.username,
+    });
+    if (userFind?.length === 0) {
+      res.status(400).send({ msg: "malicious user" });
+    }
+    const profile = {
+      username: decodedUser?.username,
+      email: decodedUser?.email,
+      role: decodedUser?.role,
+    };
+
+    res.status(200).send({ data: profile });
   } catch (err) {
     next(err);
   }
