@@ -15,10 +15,10 @@ export const registerUser = async (req, res, next) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    const isAlreadyRegistered = await User.find({ email: email });
+    const isAlreadyRegistered = await User.findOne({ email: email });
 
     // if already registered
-    if (isAlreadyRegistered?.length > 0) {
+    if (isAlreadyRegistered) {
       res.status(400).send({ msg: "Already Registered" });
     }
     if (!password) {
@@ -37,7 +37,7 @@ export const registerUser = async (req, res, next) => {
     try {
       const tokenGenerate = jwt.sign(
         { email, role: req?.body?.role, username: req?.body?.username },
-        "section-token-generate",
+        process.env.JWT_SECRET,
         {
           expiresIn: "1h",
         },
@@ -63,26 +63,26 @@ export const loginUser = async (req, res, next) => {
   try {
     const email = req.body.email;
     const password = req.body.password;
-    const userFound = await User.find({ email: email });
+    const userFound = await User.findOne({ email: email });
 
     // if already registered
-    if (userFound?.length === 0) {
+    if (!userFound) {
       res.status(400).send({ msg: "User not found" });
     }
 
     //   user found, password compare
-    const isMatch = await bcrypt.compare(password, userFound[0].password);
+    const isMatch = await bcrypt.compare(password, userFound.password);
     console.log("userFound", userFound, isMatch);
     if (!isMatch) {
       res.status(400).send({ msg: "credentials do not match" });
     }
     const tokenGen = await jwt.sign(
       {
-        email: userFound[0].email,
-        role: userFound[0].role,
-        username: userFound[0].username,
+        email: userFound.email,
+        role: userFound.role,
+        username: userFound.username,
       },
-      "section-token-generate",
+        process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
     res.status(200).send({ msg: "login successful", token: tokenGen });
@@ -110,14 +110,14 @@ export const profile = async (req, res, next) => {
 
     const decodedUser = await jwt.verify(
       requestToken,
-      "section-token-generate",
+        process.env.JWT_SECRET,
     );
 
-    const userFind = await User.find({
+    const userFind = await User.findOne({
       email: decodedUser?.email,
       username: decodedUser?.username,
     });
-    if (userFind?.length === 0) {
+    if (!userFind) {
       res.status(400).send({ msg: "malicious user" });
     }
     const profile = {
