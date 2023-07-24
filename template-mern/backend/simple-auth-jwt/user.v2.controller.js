@@ -104,42 +104,35 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res, next) => {
+export const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
       return res
         .status(400)
-        .send({ msg: "Username or password can not empty." });
+        .send({ msg: "Username or password cannot be empty." });
     }
-    try {
-      const user = await UserModel.findOne({ username });
-      if (!user) {
-        return res.status(404).send({ msg: "User not found" });
-      }
-      console.log("res after suer");
-      const passwordMatch = await bcrypt.compare(password, user?.password);
-      if (!passwordMatch) {
-        return res.status(404).send({ msg: "User not found" });
-      }
-      //   create token
-      const token = await jwt.sign(
-        {
-          userId: user?._id,
-          username: user?.username,
-          email: user?.email,
-          role: user?.role,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" },
-      );
-      return res.status(200).send({ msg: "Login Successful.", token });
-    } catch (err) {
-      console.log("err 1");
-      res.status(500).send({ error: err.message });
+
+    const user = await UserModel.findOne({ username });
+    if (!user || !(await bcrypt.compare(password, user?.password))) {
+      return res.status(404).send({ msg: "User not found" });
     }
+
+    // Create token
+    const token = await jwt.sign(
+      {
+        userId: user?._id,
+        username: user?.username,
+        email: user?.email,
+        role: user?.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" },
+    );
+
+    return res.status(200).send({ msg: "Login Successful.", token });
   } catch (err) {
-    console.log("err 2");
+    console.log("err", err);
     res.status(500).send({ error: err.message });
   }
 };
