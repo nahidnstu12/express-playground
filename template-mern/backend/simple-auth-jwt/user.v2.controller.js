@@ -136,3 +136,104 @@ export const loginUser = async (req, res) => {
     res.status(500).send({ error: err.message });
   }
 };
+
+export const profile = async (req, res) => {
+  const { authorization } = req.headers;
+  if (!authorization) {
+    return res.status(500).send({ msg: "Authorization header missing" });
+  }
+  try {
+    const parsedToken = authorization.split(" ")[1];
+    const tokenData = await jwt.verify(parsedToken, process.env.JWT_SECRET);
+
+    const userData = await UserModel.findOne({
+      $or: [
+        { username: tokenData?.username },
+        { email: tokenData?.email },
+        { _id: tokenData?.id },
+      ],
+    });
+    // const userData = await UserModel.findOne({
+    //   username: tokenData?.username,
+    //   email: tokenData?.email,
+    // });
+    if (!userData) {
+      return res.status(500).send({ msg: "User not found" });
+    }
+    // we can send authenticated user data using this route
+    const profile = {
+      id: userData?._id,
+      username: userData?.username,
+      email: userData?.email,
+      role: userData?.role,
+      phone: userData?.phone,
+      profile_pic: userData?.profile_pic,
+    };
+
+    return res.send({ data: profile });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
+export const updateUserById = async (req, res) => {
+  const { id } = req.params;
+  const { phone, role, email } = req.body;
+
+  if (!id) {
+    return res.status(500).send({ msg: "User Id is missing" });
+  }
+
+  try {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      { phone, role, email },
+      { new: true }, // To return the updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).send({ msg: "User Not Found" });
+    }
+
+    return res.status(201).send({ msg: "Record is updated." });
+  } catch (err) {
+    return res.status(500).send({ msg: err.message });
+  }
+};
+
+export const deleteUserById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(500).send({ msg: "User Id is missing" });
+  }
+  try {
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).send({ msg: "User Not Found" });
+    }
+
+    return res.status(200).send({ msg: "Record is deleted." });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
+// Utitly Functions
+/*
+snippet
+export const deleteUserById = async(req, res) => {
+  try{
+
+  }catch (err){
+    return res.status(500).send({ msg: err });
+  }
+}
+
+ return res.status(500).send({ msg: "User Not Found" });
+*/
+
+// const ExtractAutorization = (token) => {
+//
+// }
