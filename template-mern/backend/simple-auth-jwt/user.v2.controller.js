@@ -21,24 +21,6 @@ export const registerUserV1 = (req, res) => {
       });
     });
 
-    // Promise.all([usernameExist, emailExist])
-    //   .then(async () => {
-    //     if (password) {
-    //       const hashedPassword = await bcrypt.hash(password, 10);
-    //       const newUser = new UserModel({
-    //         username,
-    //         email,
-    //         password: hashedPassword,
-    //         role: ROLES.Customer,
-    //       });
-    //       await newuser?.save();
-    //       res.status(201).send({ msg: "Successfully Registered" });
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     res.status(500).send({ error: err });
-    //   });
-
     Promise.all([usernameExist, emailExist])
       .then(() => {
         if (password) {
@@ -97,7 +79,7 @@ export const registerUser = async (req, res) => {
       role: ROLES.Customer,
     });
 
-    await newuser?.save();
+    await newUser?.save();
     res.status(201).send({ msg: "Successfully Registered" });
   } catch (err) {
     res.status(500).send({ error: err.message });
@@ -113,7 +95,9 @@ export const loginUser = async (req, res) => {
         .send({ msg: "Username or password cannot be empty." });
     }
 
-    const user = await UserModel.findOne({ username });
+    const user = await UserModel.findOne({
+      $or: [{ username }, { email: username }],
+    });
     if (!user || !(await bcrypt.compare(password, user?.password))) {
       return res.status(404).send({ msg: "User not found" });
     }
@@ -176,17 +160,17 @@ export const profile = async (req, res) => {
   }
 };
 
-export const updateUserById = async (req, res) => {
-  const { id } = req.params;
+export const updateSelfUser = async (req, res) => {
+  const { userId } = req.user;
   const { phone, role, email } = req.body;
 
-  if (!id) {
+  if (!userId) {
     return res.status(500).send({ msg: "User Id is missing" });
   }
 
   try {
     const updatedUser = await UserModel.findByIdAndUpdate(
-      id,
+      { _id: userId },
       { phone, role, email },
       { new: true }, // To return the updated document
     );
