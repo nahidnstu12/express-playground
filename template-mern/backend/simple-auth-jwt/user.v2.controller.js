@@ -1,7 +1,7 @@
-import UserModel from "./user.model.js";
 import bcrypt from "bcryptjs";
-import { ROLES } from "./constant.js";
 import jwt from "jsonwebtoken";
+import { ROLES } from "./constant.js";
+import UserModel from "./user.model.js";
 
 export const registerUserV1 = (req, res) => {
   try {
@@ -57,14 +57,9 @@ export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    const usernameExist = await UserModel.findOne({ username });
-    if (usernameExist) {
-      return res.status(400).send({ msg: "Username should be unique." });
-    }
-
-    const emailExist = await UserModel.findOne({ email });
-    if (emailExist) {
-      return res.status(400).send({ msg: "Email should be unique." });
+    const userExist = await UserModel.findOne({ username, email });
+    if (userExist) {
+      return res.status(400).send({ msg: "User already exists." });
     }
 
     if (!password) {
@@ -80,9 +75,37 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser?.save();
-    res.status(201).send({ msg: "Successfully Registered" });
+
+    const token = await jwt.sign({ username }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // const token_payload = token.split(".")[1];
+    // const verifyToken = await jwt.verify(
+    //   token_payload,
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "1h" },
+    // );
+    res.status(201).send({
+      msg: "Successfully Registered",
+      ref: token,
+    });
   } catch (err) {
     res.status(500).send({ error: err.message });
+  }
+};
+
+// email verification
+export const emailVerification = async (req, res) => {
+  const { ref } = req.query;
+  if (!ref) {
+    res.status(400).send({ msg: "Invalid Verification Request" });
+  }
+  try {
+    const parsedToken = await jwt.verify(ref, process.env.JWT_SECRET);
+    res.status(200).send({ msg: "verification successful", data: parsedToken });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
   }
 };
 
@@ -204,6 +227,31 @@ export const deleteUserById = async (req, res) => {
   }
 };
 
+export const generateOTP = async (req, res) => {
+  try {
+    const OTP = generateRandomSixDigitNumber();
+    req.app.locals.OTP = OTP;
+    return res.send({
+      msg: "OTP sent successfully",
+      code: OTP,
+    });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (code === req.app.locals.OTP) {
+      await UserModel();
+    }
+    return res.send({ msg: "Verify User successfully" });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
 // Utitly Functions
 /*
 snippet
@@ -218,6 +266,25 @@ export const deleteUserById = async(req, res) => {
  return res.status(500).send({ msg: "User Not Found" });
 */
 
-// const ExtractAutorization = (token) => {
-//
-// }
+function generateRandomSixDigitNumber() {
+  const min = 100000; // Minimum 6-digit number (100000)
+  const max = 999999; // Maximum 6-digit number (999999)
+
+  // Generate a random number between min and max (inclusive)
+  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // Convert the number to a string
+  let numberString = randomNumber.toString();
+
+  // Split the string into an array of characters
+  let numberArray = numberString.split("");
+
+  // Shuffle the array using Fisher-Yates (Knuth) shuffle algorithm
+  for (let i = numberArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numberArray[i], numberArray[j]] = [numberArray[j], numberArray[i]];
+  }
+
+  // Join the shuffled array back into a string
+  return numberArray.join("");
+}

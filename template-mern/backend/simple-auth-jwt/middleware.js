@@ -32,6 +32,17 @@ export const Auth = async (req, res, next) => {
   }
 };
 
+export const localVariables = (req, res, next) => {
+  try {
+    req.app.locals = {
+      OTP: null,
+      resetSession: false,
+    };
+    next();
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
 // Utitly Functions
 /*
 snippet
