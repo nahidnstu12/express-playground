@@ -9,7 +9,8 @@ import path from "path";
 // internal imports
 import userRoute from "./route/userRoute.js";
 import authRoute from "./route/authRoute.js";
-import authRouteMDB from "./simple-auth-jwt/router";
+import authRouteMDB from "./simple-auth-jwt/auth.router.js";
+import privateRoute from "./simple-auth-jwt/private.route.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use(logger("dev"));
 app.use("/api/users", userRoute);
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v2/auth", authRouteMDB);
+app.use("/api/v2", privateRoute);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
