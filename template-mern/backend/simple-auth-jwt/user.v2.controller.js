@@ -79,7 +79,7 @@ export const registerUser = async (req, res) => {
     await newUser.save();
 
     const token = await jwt.sign({ username }, process.env.JWT_SECRET, {
-      expiresIn: "2h",
+      expiresIn: "24h",
     });
 
     console.log("verification token=>", token);
@@ -106,11 +106,14 @@ export const emailVerification = async (req, res) => {
     }
 
     // user is valid, so update user to be verified
-    await UserModel.findOneAndUpdate(
-      { username: parsedToken?.username },
+    const user = await UserModel.findOneAndUpdate(
+      { username: parsedToken?.username, is_verified: 0 },
       { is_verified: 1 },
       { new: true },
     );
+    if (!user) {
+      return res.status(400).send({ msg: "User already email verified." });
+    }
 
     res.status(200).send({ msg: "verification successful" });
   } catch (err) {
@@ -247,13 +250,18 @@ export const generateOTP = async (req, res) => {
 
   try {
     // should check phone validate
-    // const user = await UserModel.findOne({ _id: userId });
-    // if (!user) {
-    //   return res.status(404).send({ msg: "User not found" });
-    // }
     const OTP = generateRandomSixDigitNumber();
-    req.app.locals.OTP = OTP; // need to better solution
-    console.log("Phone verification otp--", req.app.locals);
+    const user = await UserModel.findOneAndUpdate(
+      { _id: userId, is_mobile_verified: 0 },
+      { otp: OTP },
+      { new: true },
+    );
+    if (!user) {
+      return res.status(404).send({ msg: "User already mobile verified." });
+    }
+
+    // req.app.locals.OTP = OTP; // need to better solution
+    console.log("Phone verification otp--", OTP);
     return res.send({
       msg: "OTP sent successfully",
       code: OTP,
@@ -266,23 +274,27 @@ export const generateOTP = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   const { userId } = req.user;
   const { code } = req.query;
-  console.log("verify otp", req.app.locals.OTP, code);
+
+  if (!userId || !code) {
+    return res.status(400).send({ msg: "Requested body is missing" });
+  }
+
   try {
-    if (code === req.app.locals.OTP) {
-      const user = await UserModel.findOneAndUpdate(
+    const userExist = await UserModel.findOne({ _id: userId });
+    if (!userExist) {
+      return res.status(404).send({ msg: "User not found" });
+    }
+    if (code === userExist?.otp) {
+      await UserModel.findOneAndUpdate(
         { _id: userId },
-        { is_mobile_verified: 1 },
+        { is_mobile_verified: 1, otp: null },
         { new: true },
       );
 
-      if (!user) {
-        return res.status(404).send({ msg: "Invalid request" });
-      }
+      // if (!user) {
+      //   return res.status(404).send({ msg: "Invalid request" });
+      // }
 
-      req.app.locals = {
-        OTP: null,
-        resetSession: true,
-      };
       return res.status(200).send({ msg: "Verify User successfully" });
     }
     return res.status(400).send({ msg: "Invalid OTP" });
@@ -292,7 +304,7 @@ export const verifyOTP = async (req, res) => {
 };
 
 export const phoneVerification = async (req, res) => {
-  const { phone } = req.body;
+  const { phone } = req.query;
   const { userId } = req.user;
   if (!phone || !userId) {
     return res.status(500).send({ msg: "Requested body is missing" });

@@ -29,6 +29,7 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     is_verified: {
+      type: Number,
       enum: [0, 1],
       default: 0,
     },
@@ -37,6 +38,7 @@ const userSchema = mongoose.Schema(
       minLength: [6, "OTP length should be 6 digit"],
     },
     is_mobile_verified: {
+      type: Number,
       enum: [0, 1],
       default: 0,
     },
