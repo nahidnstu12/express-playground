@@ -32,6 +32,14 @@ const userSchema = mongoose.Schema(
       enum: [0, 1],
       default: 0,
     },
+    otp: {
+      type: String,
+      minLength: [6, "OTP length should be 6 digit"],
+    },
+    is_mobile_verified: {
+      enum: [0, 1],
+      default: 0,
+    },
     role: {
       type: [Number],
       default: 1,

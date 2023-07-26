@@ -57,7 +57,9 @@ export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    const userExist = await UserModel.findOne({ username, email });
+    const userExist = await UserModel.findOne({
+      $or: [{ username }, { email }],
+    });
     if (userExist) {
       return res.status(400).send({ msg: "User already exists." });
     }
@@ -74,18 +76,14 @@ export const registerUser = async (req, res) => {
       role: ROLES.Customer,
     });
 
-    await newUser?.save();
+    await newUser.save();
 
     const token = await jwt.sign({ username }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "2h",
     });
 
-    // const token_payload = token.split(".")[1];
-    // const verifyToken = await jwt.verify(
-    //   token_payload,
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "1h" },
-    // );
+    console.log("verification token=>", token);
+
     res.status(201).send({
       msg: "Successfully Registered",
       ref: token,
@@ -99,11 +97,22 @@ export const registerUser = async (req, res) => {
 export const emailVerification = async (req, res) => {
   const { ref } = req.query;
   if (!ref) {
-    res.status(400).send({ msg: "Invalid Verification Request" });
+    return res.status(400).send({ msg: "Invalid Verification Request" });
   }
   try {
     const parsedToken = await jwt.verify(ref, process.env.JWT_SECRET);
-    res.status(200).send({ msg: "verification successful", data: parsedToken });
+    if (!parsedToken) {
+      return res.status(400).send({ msg: "Invalid Verification Request" });
+    }
+
+    // user is valid, so update user to be verified
+    await UserModel.findOneAndUpdate(
+      { username: parsedToken?.username },
+      { is_verified: 1 },
+      { new: true },
+    );
+
+    res.status(200).send({ msg: "verification successful" });
   } catch (err) {
     return res.status(500).send({ msg: err });
   }
@@ -119,7 +128,10 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await UserModel.findOne({
-      $or: [{ username }, { email: username }],
+      $or: [
+        { username, is_verified: 1 },
+        { email: username, is_verified: 1 },
+      ],
     });
     if (!user || !(await bcrypt.compare(password, user?.password))) {
       return res.status(404).send({ msg: "User not found" });
@@ -228,9 +240,20 @@ export const deleteUserById = async (req, res) => {
 };
 
 export const generateOTP = async (req, res) => {
+  const { userId } = req.user;
+  if (!userId) {
+    return res.status(500).send({ msg: "Requested body is missing" });
+  }
+
   try {
+    // should check phone validate
+    // const user = await UserModel.findOne({ _id: userId });
+    // if (!user) {
+    //   return res.status(404).send({ msg: "User not found" });
+    // }
     const OTP = generateRandomSixDigitNumber();
-    req.app.locals.OTP = OTP;
+    req.app.locals.OTP = OTP; // need to better solution
+    console.log("Phone verification otp--", req.app.locals);
     return res.send({
       msg: "OTP sent successfully",
       code: OTP,
@@ -241,12 +264,53 @@ export const generateOTP = async (req, res) => {
 };
 
 export const verifyOTP = async (req, res) => {
+  const { userId } = req.user;
+  const { code } = req.query;
+  console.log("verify otp", req.app.locals.OTP, code);
   try {
-    const { code } = req.query;
     if (code === req.app.locals.OTP) {
-      await UserModel();
+      const user = await UserModel.findOneAndUpdate(
+        { _id: userId },
+        { is_mobile_verified: 1 },
+        { new: true },
+      );
+
+      if (!user) {
+        return res.status(404).send({ msg: "Invalid request" });
+      }
+
+      req.app.locals = {
+        OTP: null,
+        resetSession: true,
+      };
+      return res.status(200).send({ msg: "Verify User successfully" });
     }
-    return res.send({ msg: "Verify User successfully" });
+    return res.status(400).send({ msg: "Invalid OTP" });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
+export const phoneVerification = async (req, res) => {
+  const { phone } = req.body;
+  const { userId } = req.user;
+  if (!phone || !userId) {
+    return res.status(500).send({ msg: "Requested body is missing" });
+  }
+  try {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      { _id: userId },
+      { phone },
+      { new: true }, // To return the updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).send({ msg: "User Not Found" });
+    }
+
+    // otp generate
+
+    return res.status(201).send({ msg: "Record is updated." });
   } catch (err) {
     return res.status(500).send({ msg: err });
   }

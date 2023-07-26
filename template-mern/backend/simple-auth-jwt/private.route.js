@@ -4,6 +4,7 @@ import {
   deleteUserById,
   emailVerification,
   generateOTP,
+  phoneVerification,
   profile,
   updateSelfUser,
   verifyOTP,
@@ -14,7 +15,10 @@ const router = express.Router();
 router.get("/profile", profile);
 router.put("/user/update", Auth, updateSelfUser);
 router.delete("/user/:id", Auth, deleteUserById);
-router.get("/generate-otp", localVariables, generateOTP);
-router.get("/verify-otp", localVariables, verifyOTP);
+
 router.get("/email-verify", emailVerification);
+
+router.get("/phone-verify", Auth, phoneVerification);
+router.get("/generate-otp", Auth, localVariables, generateOTP);
+router.get("/verify-otp", Auth, verifyOTP);
 export default router;
