@@ -6,6 +6,7 @@ import {
   generateOTP,
   phoneVerification,
   profile,
+  resetPassword,
   updateSelfUser,
   verifyOTP,
 } from "./user.v2.controller.js";
@@ -21,4 +22,6 @@ router.get("/email-verify", emailVerification);
 router.get("/phone-verify", Auth, phoneVerification);
 router.get("/generate-otp", Auth, localVariables, generateOTP);
 router.get("/verify-otp", Auth, verifyOTP);
+
+router.put("/reset-password", Auth, resetPassword);
 export default router;

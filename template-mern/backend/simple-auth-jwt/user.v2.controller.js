@@ -328,6 +328,31 @@ export const phoneVerification = async (req, res) => {
   }
 };
 
+export const resetPassword = async (req, res) => {
+  const { password } = req.body;
+  const { userId } = req.user;
+  if (!password || !userId) {
+    return res.status(500).send({ msg: "Requested body is missing" });
+  }
+  try {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      { _id: userId },
+      { password: await bcrypt.hash(password, 10) },
+      { new: true }, // To return the updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).send({ msg: "User Not Found" });
+    }
+
+    // otp generate
+
+    return res.status(201).send({ msg: "Successfully resetting password." });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
 // Utitly Functions
 /*
 snippet
