@@ -6,6 +6,7 @@ import {
   generateOTP,
   phoneVerification,
   profile,
+  registerMail,
   resetPassword,
   updateSelfUser,
   verifyOTP,
@@ -24,4 +25,7 @@ router.get("/generate-otp", Auth, localVariables, generateOTP);
 router.get("/verify-otp", Auth, verifyOTP);
 
 router.put("/reset-password", Auth, resetPassword);
+
+// email router
+router.post("/register-mail", registerMail);
 export default router;

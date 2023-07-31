@@ -1,4 +1,6 @@
 import bcrypt from "bcryptjs";
+import req from "express/lib/request.js";
+import res from "express/lib/response.js";
 import jwt from "jsonwebtoken";
 import { ROLES } from "./constant.js";
 import UserModel from "./user.model.js";
@@ -353,6 +355,7 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+export const registerMail = (req, res) => {};
 // Utitly Functions
 /*
 snippet
