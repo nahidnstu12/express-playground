@@ -21,6 +21,25 @@ let mailGenerator = new Mailgen({
   },
 });
 
+const emailConfirmationBody = ({ username, userEmail }) => {
+  let email = {
+    body: {
+      name: username || userEmail,
+      intro: "Email Verification Link" + "",
+      outro:
+        "Need help, or have questions? Just reply to this email, we'd love to help.",
+    },
+  };
+  let emailBody = mailGenerator.generate(email);
+
+  let message = {
+    from: process.env.EMAIL_USERNAME,
+    to: userEmail,
+    subject: "Email Confirmation",
+    html: emailBody,
+  };
+};
+
 export const registerMail = async (req, res) => {
   const { username, userEmail, text, subject } = req.body;
 
@@ -43,15 +62,8 @@ export const registerMail = async (req, res) => {
     subject: subject || "Test subject",
     html: emailBody,
   };
-  console.log(process.env.EMAIL_USERNAME, process.env.EMAIL_PASSWORD);
 
-  let info = await transporter.sendMail({
-    from: process.env.EMAIL_USERNAME,
-    to: userEmail,
-    subject: subject || "Test subject",
-    text: "Hello world?", // plain text body
-    html: emailBody, // html body
-  });
+  let info = await transporter.sendMail(message);
   console.log("Message sent: %s", info.messageId);
   return res
     .status(200)
