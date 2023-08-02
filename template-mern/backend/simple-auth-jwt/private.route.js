@@ -1,4 +1,5 @@
 import express from "express";
+import { registerMail } from "./mailer.js";
 import { Auth, localVariables } from "./middleware.js";
 import {
   deleteUserById,
@@ -6,7 +7,6 @@ import {
   generateOTP,
   phoneVerification,
   profile,
-  registerMail,
   resetPassword,
   updateSelfUser,
   verifyOTP,

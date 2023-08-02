@@ -5,6 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import path from "path";
+import appConfig from "./@core/config.js";
 
 // internal imports
 import userRoute from "./route/userRoute.js";
