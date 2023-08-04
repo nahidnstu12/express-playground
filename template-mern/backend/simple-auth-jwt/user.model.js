@@ -14,7 +14,7 @@ const userSchema = mongoose.Schema(
       unique: [true, "email already exists"],
       validate: {
         validator: function (value) {
-          return /\b[A-Za-z0-9.+_-]+@mail\.com\b/.test(value);
+          return /\b[A-Za-z0-9.+_-]+@gmail\.com\b/.test(value);
         },
         message: "Invalid email format. Expected format test@mail.com",
       },

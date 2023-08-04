@@ -1,3 +1,5 @@
+import { ROLES } from "./constant.js";
+import UserModel from "./user.model.js";
 import User from "./user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -82,7 +84,7 @@ export const loginUser = async (req, res, next) => {
         role: userFound.role,
         username: userFound.username,
       },
-        process.env.JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
     res.status(200).send({ msg: "login successful", token: tokenGen });
@@ -108,10 +110,7 @@ export const profile = async (req, res, next) => {
       res.status(401).send({ msg: "You have not permission." });
     }
 
-    const decodedUser = await jwt.verify(
-      requestToken,
-        process.env.JWT_SECRET,
-    );
+    const decodedUser = await jwt.verify(requestToken, process.env.JWT_SECRET);
 
     const userFind = await User.findOne({
       email: decodedUser?.email,
@@ -129,5 +128,55 @@ export const profile = async (req, res, next) => {
     res.status(200).send({ data: profile });
   } catch (err) {
     next(err);
+  }
+};
+
+export const registerUserV1 = (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const usernameExist = new Promise((resolve, reject) => {
+      UserModel.findOne({ username }, (err, user) => {
+        if (err) reject(new Error(err));
+        if (user) reject({ msg: "Provide username should be unique." });
+        resolve();
+      });
+    });
+    const emailExist = new Promise((resolve, reject) => {
+      UserModel.findOne({ email }, (err, user) => {
+        if (err) reject(new Error(err));
+        if (user) reject({ msg: "Provide email should be unique." });
+        resolve();
+      });
+    });
+
+    Promise.all([usernameExist, emailExist])
+      .then(() => {
+        if (password) {
+          bcrypt
+            .hash(password, 10)
+            .then((hashedPassword) => {
+              const newUser = new UserModel({
+                username,
+                email,
+                password: hashedPassword,
+                role: ROLES.Customer,
+              });
+              newUser
+                .save()
+                .then(() =>
+                  res.status(201).send({ msg: "Successfully Registered" }),
+                )
+                .catch((err) => res.status(500).send({ err }));
+            })
+            .catch((err) => res.status(500).send({ err }));
+        } else {
+          res.status(400).send({ msg: "Password is missing!" });
+        }
+      })
+      .catch((err) => {
+        res.status(500).send({ error: err });
+      });
+  } catch (err) {
+    res.status(500).send({ error: err });
   }
 };

@@ -2,57 +2,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import appConfig from "../@core/config.js";
 import { ROLES } from "./constant.js";
+import {
+  generateOTPService,
+  generateRandomSixDigitNumber,
+  registerMailService,
+} from "./service.js";
 import UserModel from "./user.model.js";
-
-export const registerUserV1 = (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    const usernameExist = new Promise((resolve, reject) => {
-      UserModel.findOne({ username }, (err, user) => {
-        if (err) reject(new Error(err));
-        if (user) reject({ msg: "Provide username should be unique." });
-        resolve();
-      });
-    });
-    const emailExist = new Promise((resolve, reject) => {
-      UserModel.findOne({ email }, (err, user) => {
-        if (err) reject(new Error(err));
-        if (user) reject({ msg: "Provide email should be unique." });
-        resolve();
-      });
-    });
-
-    Promise.all([usernameExist, emailExist])
-      .then(() => {
-        if (password) {
-          bcrypt
-            .hash(password, 10)
-            .then((hashedPassword) => {
-              const newUser = new UserModel({
-                username,
-                email,
-                password: hashedPassword,
-                role: ROLES.Customer,
-              });
-              newUser
-                .save()
-                .then(() =>
-                  res.status(201).send({ msg: "Successfully Registered" }),
-                )
-                .catch((err) => res.status(500).send({ err }));
-            })
-            .catch((err) => res.status(500).send({ err }));
-        } else {
-          res.status(400).send({ msg: "Password is missing!" });
-        }
-      })
-      .catch((err) => {
-        res.status(500).send({ error: err });
-      });
-  } catch (err) {
-    res.status(500).send({ error: err });
-  }
-};
 
 export const registerUser = async (req, res) => {
   try {
@@ -87,9 +42,12 @@ export const registerUser = async (req, res) => {
     console.log("verification token=>", token);
 
     res.status(201).send({
-      msg: "Successfully Registered",
-      ref: token,
+      msg: "Successfully Registered. Please Confirm your registration from your Email.",
+      // ref: token,
     });
+    // sending mail
+    const link = `http://localhost:6050/api/v2/email-verify?ref=${token}`;
+    await registerMailService({ username, userEmail: email, link, type: 1 });
   } catch (err) {
     res.status(500).send({ error: err.message });
   }
@@ -118,7 +76,8 @@ export const emailVerification = async (req, res) => {
       return res.status(400).send({ msg: "User already email verified." });
     }
 
-    res.status(200).send({ msg: "verification successful" });
+    // res.status(200).send({ msg: "verification successful" });
+    res.redirect(200, "https://platform.futurenation.gov.bd/");
   } catch (err) {
     return res.status(500).send({ msg: err });
   }
@@ -178,10 +137,6 @@ export const profile = async (req, res) => {
         { _id: tokenData?.id },
       ],
     });
-    // const userData = await UserModel.findOne({
-    //   username: tokenData?.username,
-    //   email: tokenData?.email,
-    // });
     if (!userData) {
       return res.status(500).send({ msg: "User not found" });
     }
@@ -245,6 +200,37 @@ export const deleteUserById = async (req, res) => {
   }
 };
 
+export const phoneVerification = async (req, res) => {
+  const { phone } = req.query;
+  const { userId } = req.user;
+  if (!phone || !userId) {
+    return res.status(500).send({ msg: "Requested body is missing" });
+  }
+  try {
+    const { msg, code } = await generateOTPService({ userId });
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId, is_mobile_verified: 0 },
+      { phone, otp: code },
+      { new: true }, // To return the updated document
+    );
+
+    if (!updatedUser) {
+      // return res.status(400).send({ msg: "User not found." });
+      return res.status(400).send({ msg: "User already mobile verified." });
+    }
+    res.status(200).send({ msg });
+    // send otp to mail
+    await registerMailService({
+      username: updatedUser?.username,
+      userEmail: updatedUser?.email,
+      otp: code,
+      type: 2,
+    });
+  } catch (err) {
+    return res.status(500).send({ msg: err });
+  }
+};
+
 export const generateOTP = async (req, res) => {
   const { userId } = req.user;
   if (!userId) {
@@ -294,10 +280,6 @@ export const verifyOTP = async (req, res) => {
         { new: true },
       );
 
-      // if (!user) {
-      //   return res.status(404).send({ msg: "Invalid request" });
-      // }
-
       return res.status(200).send({ msg: "Verify User successfully" });
     }
     return res.status(400).send({ msg: "Invalid OTP" });
@@ -306,34 +288,10 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
-export const phoneVerification = async (req, res) => {
-  const { phone } = req.query;
-  const { userId } = req.user;
-  if (!phone || !userId) {
-    return res.status(500).send({ msg: "Requested body is missing" });
-  }
-  try {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      { _id: userId },
-      { phone },
-      { new: true }, // To return the updated document
-    );
-
-    if (!updatedUser) {
-      return res.status(404).send({ msg: "User Not Found" });
-    }
-
-    // otp generate
-
-    return res.status(201).send({ msg: "Record is updated." });
-  } catch (err) {
-    return res.status(500).send({ msg: err });
-  }
-};
-
 export const resetPassword = async (req, res) => {
   const { password } = req.body;
   const { userId } = req.user;
+  console.log({ password, userId });
   if (!password || !userId) {
     return res.status(500).send({ msg: "Requested body is missing" });
   }
@@ -369,26 +327,3 @@ export const deleteUserById = async(req, res) => {
 
  return res.status(500).send({ msg: "User Not Found" });
 */
-
-function generateRandomSixDigitNumber() {
-  const min = 100000; // Minimum 6-digit number (100000)
-  const max = 999999; // Maximum 6-digit number (999999)
-
-  // Generate a random number between min and max (inclusive)
-  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-
-  // Convert the number to a string
-  let numberString = randomNumber.toString();
-
-  // Split the string into an array of characters
-  let numberArray = numberString.split("");
-
-  // Shuffle the array using Fisher-Yates (Knuth) shuffle algorithm
-  for (let i = numberArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [numberArray[i], numberArray[j]] = [numberArray[j], numberArray[i]];
-  }
-
-  // Join the shuffled array back into a string
-  return numberArray.join("");
-}

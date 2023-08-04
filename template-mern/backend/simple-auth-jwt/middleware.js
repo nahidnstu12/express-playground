@@ -45,14 +45,5 @@ export const localVariables = (req, res, next) => {
 };
 // Utitly Functions
 /*
-snippet
-export const deleteUserById = async(req, res) => {
-  try{
 
-  }catch (err){
-    return res.status(500).send({ msg: err });
-  }
-}
-
- return res.status(500).send({ msg: "User Not Found" });
 */

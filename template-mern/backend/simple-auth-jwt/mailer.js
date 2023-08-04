@@ -6,12 +6,12 @@ let nodeConfig = {
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: appConfig.EMAIL_USERNAME, // generated ethereal user
-    pass: appConfig.EMAIL_PASSWORD, // generated ethereal password
+    user: appConfig.EMAIL_USERNAME,
+    pass: appConfig.EMAIL_PASSWORD,
   },
 };
 
-let transporter = nodemailer.createTransport(nodeConfig);
+export let transporter = nodemailer.createTransport(nodeConfig);
 
 let mailGenerator = new Mailgen({
   theme: "default",
@@ -21,7 +21,7 @@ let mailGenerator = new Mailgen({
   },
 });
 
-const emailConfirmationBody = ({ username, userEmail }) => {
+export const emailConfirmationBody = ({ username, userEmail, link }) => {
   let email = {
     body: {
       name: username || userEmail,
@@ -31,7 +31,7 @@ const emailConfirmationBody = ({ username, userEmail }) => {
         button: {
           color: "#22BC66", // Optional action button color
           text: "Confirm your account",
-          link: "https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010",
+          link: link,
         },
       },
       outro:
@@ -40,38 +40,46 @@ const emailConfirmationBody = ({ username, userEmail }) => {
   };
   let emailBody = mailGenerator.generate(email);
 
-  let message = {
+  return {
     from: process.env.EMAIL_USERNAME,
     to: userEmail,
     subject: "Email Confirmation",
     html: emailBody,
   };
 };
-
-export const registerMail = async (req, res) => {
-  const { username, userEmail, text, subject } = req.body;
-
-  // body of the email
+export const phoneVerificationOTPBody = ({ username, userEmail, otp }) => {
   let email = {
     body: {
-      name: username,
-      intro:
-        text ||
-        "Welcome to Rest Api Service! We're very excited to have you on board.",
+      name: username || userEmail,
+      intro: "Welcome to Mailgen! We're very excited to have you on board.",
+      action: {
+        instructions: "Mobile verification OTP code here:",
+        button: {
+          color: "#170c13",
+          text: otp,
+          link: "",
+        },
+      },
       outro:
         "Need help, or have questions? Just reply to this email, we'd love to help.",
     },
   };
   let emailBody = mailGenerator.generate(email);
 
-  let message = {
+  return {
     from: process.env.EMAIL_USERNAME,
     to: userEmail,
-    subject: subject || "Test subject",
+    subject: "Phone number verification otp",
     html: emailBody,
   };
+};
 
-  let info = await transporter.sendMail(message);
+export const registerMail = async (req, res) => {
+  const { username, userEmail } = req.body;
+  const link = "http://frontend.shared.local/courses/5";
+  let info = await transporter.sendMail(
+    emailConfirmationBody({ username, userEmail, link }),
+  );
   console.log("Message sent: %s", info.messageId);
   return res
     .status(200)
