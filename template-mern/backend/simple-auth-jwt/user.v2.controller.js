@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
-import req from "express/lib/request.js";
-import res from "express/lib/response.js";
 import jwt from "jsonwebtoken";
+import appConfig from "../@core/config.js";
 import { ROLES } from "./constant.js";
 import UserModel from "./user.model.js";
 
@@ -80,8 +79,9 @@ export const registerUser = async (req, res) => {
 
     await newUser.save();
 
-    const token = await jwt.sign({ username }, process.env.JWT_SECRET, {
+    const token = await jwt.sign({ username }, appConfig.JWT_SECRET, {
       expiresIn: "24h",
+      algorithm: "HS256",
     });
 
     console.log("verification token=>", token);
@@ -101,8 +101,9 @@ export const emailVerification = async (req, res) => {
   if (!ref) {
     return res.status(400).send({ msg: "Invalid Verification Request" });
   }
+
   try {
-    const parsedToken = await jwt.verify(ref, process.env.JWT_SECRET);
+    const parsedToken = await jwt.verify(ref, appConfig.JWT_SECRET);
     if (!parsedToken) {
       return res.status(400).send({ msg: "Invalid Verification Request" });
     }
@@ -150,7 +151,7 @@ export const loginUser = async (req, res) => {
         email: user?.email,
         role: user?.role,
       },
-      process.env.JWT_SECRET,
+      appConfig.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
@@ -168,7 +169,7 @@ export const profile = async (req, res) => {
   }
   try {
     const parsedToken = authorization.split(" ")[1];
-    const tokenData = await jwt.verify(parsedToken, process.env.JWT_SECRET);
+    const tokenData = await jwt.verify(parsedToken, appConfig.JWT_SECRET);
 
     const userData = await UserModel.findOne({
       $or: [
@@ -355,7 +356,6 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-export const registerMail = (req, res) => {};
 // Utitly Functions
 /*
 snippet

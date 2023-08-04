@@ -25,7 +25,15 @@ const emailConfirmationBody = ({ username, userEmail }) => {
   let email = {
     body: {
       name: username || userEmail,
-      intro: "Email Verification Link" + "",
+      intro: "Welcome to Mailgen! We're very excited to have you on board.",
+      action: {
+        instructions: "To get started with Mailgen, please click here:",
+        button: {
+          color: "#22BC66", // Optional action button color
+          text: "Confirm your account",
+          link: "https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010",
+        },
+      },
       outro:
         "Need help, or have questions? Just reply to this email, we'd love to help.",
     },
@@ -68,13 +76,4 @@ export const registerMail = async (req, res) => {
   return res
     .status(200)
     .send({ msg: "You should have been received email from our service." });
-
-  // transporter.sendMail(message).then(() => {
-  //   return res
-  //     .status(200)
-  //     .send({ msg: "You should have been received email from our service." })
-  //     .catch((error) =>
-  //       res.status(500).send({ error, dev_note: "mail can't send" }),
-  //     );
-  // });
 };
